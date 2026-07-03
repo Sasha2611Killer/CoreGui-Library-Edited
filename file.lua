@@ -22,7 +22,7 @@ end
 local getcustomasset = getsynasset or getcustomasset
 
 local Sections = {
-	["Record"] = {"Record", "CapturesTab"},  -- Было "RecordTab"
+	["Record"] = {"Record", "CapturesTab"}, 
 	["Help"] = {"Help", "HelpTab"}, 
 	["Report"] = {"ReportAbusePage", "ReportAbuseTab"}
 }
@@ -93,18 +93,13 @@ function Library.Section(Sectione)
 			writefile(FileName, game:HttpGet(Url))
 			local TabLabel = SectionTab:FindFirstChild("TabLabel")
 			if TabLabel then
-				-- Ищем ImageLabel внутри TabLabel
 				local icon = TabLabel:FindFirstChildWhichIsA("ImageLabel")
 				if icon then
 					icon.Image = getcustomasset(FileName)
 				end
 			end
 		end)
-
-		spawn(function()
-			wait(3)
-			pcall(delfile, FileName)
-		end)
+		
 	end
 
 	Section.Button = function(Text, Callback)
