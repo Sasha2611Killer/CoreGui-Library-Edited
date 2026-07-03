@@ -21,21 +21,71 @@ end
 
 local getcustomasset = getsynasset or getcustomasset
 
-local Sections = {
-	["Record"] = {"Record", "CapturesTab"}, 
-	["Help"] = {"Help", "HelpTab"}, 
-	["Report"] = {"ReportAbusePage", "ReportAbuseTab"}
+-- ИСПРАВЛЕНО: теперь это массив с названиями вкладок
+local TabNames = {
+	"CapturesTab", 
+	"GameSettingsTab", 
+	"HelpTab", 
+	"PeopleTab", 
+	"ReportAbuseTab"
 }
 
 function Library.Section(Sectione)
 	local Section = {}
 
-	local SectionTab = HubBar:FindFirstChild(Sections[Sectione][2])
-	local SectionView = PageViewInnerFrame:FindFirstChild(Sections[Sectione][1])
+	-- Ищем вкладку по индексу
+	local SectionTab = nil
+	if type(Sectione) == "number" and TabNames[Sectione] then
+		SectionTab = HubBarContainer:FindFirstChild(TabNames[Sectione])
+	else
+		-- Если передано имя, ищем по имени
+		SectionTab = HubBarContainer:FindFirstChild(Sectione)
+	end
+
+	-- Если вкладка не найдена, пробуем найти по всем доступным
+	if not SectionTab then
+		for _, tabName in pairs(TabNames) do
+			local found = HubBarContainer:FindFirstChild(tabName)
+			if found then
+				SectionTab = found
+				break
+			end
+		end
+	end
+
+	if not SectionTab then
+		warn("Вкладка не найдена!")
+		return {
+			Title = function() end,
+			Icon = function() end,
+			Button = function() end,
+			Switch = function() end,
+			Slider = function() end,
+			Divider = function() end
+		}
+	end
+
+	-- Находим соответствующую страницу
+	local pageName = string.gsub(SectionTab.Name, "Tab", "")
+	local SectionView = PageViewInnerFrame:FindFirstChild(pageName)
+
+	if not SectionView then
+		-- Пробуем другие варианты названий
+		local possibleNames = {
+			pageName,
+			SectionTab.Name,
+			string.gsub(SectionTab.Name, "Tab", "Page"),
+			SectionTab.Name .. "Page"
+		}
+
+		for _, name in pairs(possibleNames) do
+			SectionView = PageViewInnerFrame:FindFirstChild(name)
+			if SectionView then break end
+		end
+	end
 
 	if SectionView then
 		local CustomTab = SectionView:FindFirstChild("CustomTab")
-
 		if CustomTab then
 			CustomTab:Destroy()
 		end
@@ -56,8 +106,6 @@ function Library.Section(Sectione)
 
 	RunService.Heartbeat:Connect(function()
 		if Frame.Parent then
-			local SectionView = PageViewInnerFrame:FindFirstChild(Sections[Sectione][1])
-
 			if SectionView then
 				for _, v in pairs(SectionView:GetChildren()) do
 					if v ~= Frame then
@@ -66,7 +114,6 @@ function Library.Section(Sectione)
 						end)
 					end
 				end
-
 				Frame.Parent = SectionView
 				Frame.Visible = SectionView.Visible
 			end
@@ -99,12 +146,14 @@ function Library.Section(Sectione)
 				end
 			end
 		end)
-		
+
+		spawn(function()
+			wait(3)
+			pcall(delfile, FileName)
+		end)
 	end
 
 	Section.Button = function(Text, Callback)
-		local n = {} for i = 1, 9 do table.insert(n, string.char(string.sub(string.format("%09d", #Frame:GetChildren()), i, i) + 97)) end
-
 		local Button = Instance.new("ImageButton", Frame)
 		Button.Name = "Button"
 		Button.LayoutOrder = #Frame:GetChildren()
@@ -393,7 +442,7 @@ function Library.Section(Sectione)
 		SliderFrame.BackgroundTransparency = 1.000
 		SliderFrame.BorderSizePixel = 0
 		SliderFrame.Position = UDim2.new(0, 0, 0, 250)
-		SliderFrame.Selectable = falsew
+		SliderFrame.Selectable = false
 		SliderFrame.Size = UDim2.new(1, 0, 0, 50)
 		SliderFrame.ZIndex = 2
 		SliderFrame.AutoButtonColor = false
