@@ -22,7 +22,7 @@ end
 local getcustomasset = getsynasset or getcustomasset
 
 local Sections = {
-	["Record"] = {"Record", "RecordTab"}, 
+	["Record"] = {"Record", "CapturesTab"},  -- Было "RecordTab"
 	["Help"] = {"Help", "HelpTab"}, 
 	["Report"] = {"ReportAbusePage", "ReportAbuseTab"}
 }
@@ -74,19 +74,36 @@ function Library.Section(Sectione)
 	end)
 
 	Section.Title = function(Title)
-		SectionTab.Icon.Title.Text = Title
+		if SectionTab then
+			local TabLabel = SectionTab:FindFirstChild("TabLabel")
+			if TabLabel then
+				local TitleLabel = TabLabel:FindFirstChild("Title")
+				if TitleLabel then
+					TitleLabel.Text = Title
+				end
+			end
+		end
 	end
 
 	Section.Icon = function(Url)
+		if not SectionTab then return end
+
 		local FileName = HttpService:GenerateGUID(false) .. ".png"
-
-		writefile(FileName, game:HttpGet(Url))
-
-		SectionTab.Icon.Image = getcustomasset(FileName)
+		pcall(function()
+			writefile(FileName, game:HttpGet(Url))
+			local TabLabel = SectionTab:FindFirstChild("TabLabel")
+			if TabLabel then
+				-- Ищем ImageLabel внутри TabLabel
+				local icon = TabLabel:FindFirstChildWhichIsA("ImageLabel")
+				if icon then
+					icon.Image = getcustomasset(FileName)
+				end
+			end
+		end)
 
 		spawn(function()
 			wait(3)
-			delfile(FileName)
+			pcall(delfile, FileName)
 		end)
 	end
 
